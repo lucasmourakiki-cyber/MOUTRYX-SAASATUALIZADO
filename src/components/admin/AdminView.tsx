@@ -20,9 +20,13 @@ export const AdminView: React.FC = () => {
     currentCompany,
     currentUserRole,
     auditLogs,
-    documents,
-    activeTab,
+    documents, activeTab, updateCurrentCompany,
   } = useApp();
+  const [companyForm, setCompanyForm] = useState(() => ({ name: currentCompany.name || '', tradeName: currentCompany.tradeName || '', cnpj: currentCompany.cnpj || '', email: currentCompany.email || '', phone: currentCompany.phone || '', city: currentCompany.city || '', state: currentCompany.state || '' }));
+  const [savingCompany, setSavingCompany] = useState(false);
+  const [companyMessage, setCompanyMessage] = useState<string | null>(null);
+  React.useEffect(() => { setCompanyForm({ name: currentCompany.name || '', tradeName: currentCompany.tradeName || '', cnpj: currentCompany.cnpj || '', email: currentCompany.email || '', phone: currentCompany.phone || '', city: currentCompany.city || '', state: currentCompany.state || '' }); }, [currentCompany.id]);
+  const handleSaveCompany = async () => { setSavingCompany(true); setCompanyMessage(null); try { await updateCurrentCompany(companyForm); setCompanyMessage('Dados da empresa salvos com sucesso.'); } catch (error: any) { setCompanyMessage(error?.message || 'Não foi possível salvar os dados da empresa.'); } finally { setSavingCompany(false); } };
 
   const [adminTab, setAdminTab] = useState<'empresa' | 'permissoes' | 'documentos' | 'auditoria'>(() => {
     if (activeTab === 'permissoes') return 'permissoes';
@@ -116,7 +120,8 @@ export const AdminView: React.FC = () => {
                 <label className="font-bold text-slate-600 block mb-1">Razão Social</label>
                 <input
                   type="text"
-                  defaultValue={currentCompany.name}
+                  value={companyForm.name}
+                  onChange={(e) => setCompanyForm((f) => ({ ...f, name: e.target.value }))}
                   className="w-full rounded-xl border border-slate-300 p-2.5 font-bold"
                 />
               </div>
@@ -125,7 +130,8 @@ export const AdminView: React.FC = () => {
                 <label className="font-bold text-slate-600 block mb-1">Nome Fantasia</label>
                 <input
                   type="text"
-                  defaultValue={currentCompany.tradeName || currentCompany.name}
+                  value={companyForm.tradeName}
+                  onChange={(e) => setCompanyForm((f) => ({ ...f, tradeName: e.target.value }))}
                   className="w-full rounded-xl border border-slate-300 p-2.5 font-bold"
                 />
               </div>
@@ -134,25 +140,20 @@ export const AdminView: React.FC = () => {
                 <label className="font-bold text-slate-600 block mb-1">CNPJ</label>
                 <input
                   type="text"
-                  defaultValue={currentCompany.cnpj}
+                  value={companyForm.cnpj}
+                  onChange={(e) => setCompanyForm((f) => ({ ...f, cnpj: e.target.value }))}
                   className="w-full rounded-xl border border-slate-300 p-2.5 font-mono"
                 />
               </div>
 
-              <div>
-                <label className="font-bold text-slate-600 block mb-1">Inscrição Estadual</label>
-                <input
-                  type="text"
-                  defaultValue={currentCompany.stateRegistration || 'ISENTO'}
-                  className="w-full rounded-xl border border-slate-300 p-2.5 font-mono"
-                />
-              </div>
+              <div><label className="font-bold text-slate-600 block mb-1">Cidade</label><input type="text" value={companyForm.city} onChange={(e) => setCompanyForm((f) => ({ ...f, city: e.target.value }))} className="w-full rounded-xl border border-slate-300 p-2.5" /></div><div><label className="font-bold text-slate-600 block mb-1">Estado (UF)</label><input type="text" maxLength={2} value={companyForm.state} onChange={(e) => setCompanyForm((f) => ({ ...f, state: e.target.value.toUpperCase() }))} className="w-full rounded-xl border border-slate-300 p-2.5 font-mono uppercase" /></div>
 
               <div>
                 <label className="font-bold text-slate-600 block mb-1">E-mail Financeiro</label>
                 <input
                   type="email"
-                  defaultValue={currentCompany.email}
+                  value={companyForm.email}
+                  onChange={(e) => setCompanyForm((f) => ({ ...f, email: e.target.value }))}
                   className="w-full rounded-xl border border-slate-300 p-2.5"
                 />
               </div>
@@ -161,7 +162,8 @@ export const AdminView: React.FC = () => {
                 <label className="font-bold text-slate-600 block mb-1">WhatsApp Comercial</label>
                 <input
                   type="text"
-                  defaultValue={currentCompany.phone}
+                  value={companyForm.phone}
+                  onChange={(e) => setCompanyForm((f) => ({ ...f, phone: e.target.value }))}
                   className="w-full rounded-xl border border-slate-300 p-2.5"
                 />
               </div>
@@ -170,17 +172,14 @@ export const AdminView: React.FC = () => {
                 <label className="font-bold text-slate-600 block mb-1">Endereço da Base Operacional</label>
                 <input
                   type="text"
-                  defaultValue={`${currentCompany.address} - ${currentCompany.city}/${currentCompany.state}`}
+                  value={`${companyForm.city}${companyForm.state ? `/${companyForm.state}` : }`}
+                  readOnly
                   className="w-full rounded-xl border border-slate-300 p-2.5"
                 />
               </div>
             </div>
 
-            <div className="flex justify-end pt-3">
-              <button className="rounded-xl bg-[#05521F] hover:bg-[#2E7D32] text-white px-5 py-2.5 text-xs font-bold transition-colors cursor-pointer border border-[#05521F]/30">
-                Salvar Alterações
-              </button>
-            </div>
+            <div className="flex items-center justify-end gap-3 pt-3">{companyMessage && <span className={`text-xs font-semibold ${companyMessage.includes('sucesso') ? 'text-emerald-700' : 'text-rose-600'}`}>{companyMessage}</span>}<button type="button" onClick={handleSaveCompany} disabled={savingCompany} className="rounded-xl bg-[#05521F] hover:bg-[#2E7D32] disabled:opacity-60 text-white px-5 py-2.5 text-xs font-bold transition-colors cursor-pointer border border-[#05521F]/30">{savingCompany ? 'Salvando...' : 'Salvar Alterações'}</button></div>
           </div>
 
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs space-y-4">

@@ -56,6 +56,7 @@ interface AppContextType {
   // Current Tenant & Role
   currentCompany: Company;
   setCurrentCompanyId: (id: string) => void;
+  updateCurrentCompany: (updates: Partial<Company>) => Promise<Company>;
   companies: Company[];
   isSuperAdmin: boolean;
   currentUserRole: UserRole;
@@ -306,18 +307,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (user.role) {
         setCurrentUserRole(user.role as UserRole);
       }
-      // Ensure the user's company is in the local companies list
+      // Never fabricate a tenant name from the user's name. The company record on the server is authoritative.
       setCompanies((prev) => {
-        const exists = prev.some((c) => c && c.id === user.companyId);
-        if (!exists) {
-          const newComp = createDefaultCompany(
-            user.companyId,
-            user.name ? `Empresa ${user.name}` : undefined,
-            user.name
-          );
-          return [...prev, newComp];
-        }
-        return prev;
+        if (prev.some((c) => c && c.id === user.companyId)) return prev;
+        return [...prev, createDefaultCompany(user.companyId, 'Carregando empresa...', user.name)];
       });
     }
   }, [user]);
@@ -407,9 +400,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const currentCompany = useMemo(() => {
     const found = companies.find((c) => c.id === currentCompanyId);
     if (found) return found;
-    if (user?.companyId && user.companyId === currentCompanyId) {
-      return createDefaultCompany(user.companyId, user.name ? `Empresa ${user.name}` : undefined, user.name);
-    }
     return companies[0] || createDefaultCompany(currentCompanyId || 'comp-default', 'Organização');
   }, [companies, currentCompanyId, user]);
 
@@ -424,7 +414,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const myComp = companies.find((c) => c.id === targetId);
     if (myComp) return [myComp];
     if (targetId) {
-      return [createDefaultCompany(targetId, user?.name ? `Empresa ${user.name}` : undefined, user?.name)];
+      return [createDefaultCompany(targetId, 'Carregando empresa...', user?.name)];
     }
     return companies.slice(0, 1);
   }, [companies, isSuperAdmin, user, currentCompanyId]);
@@ -553,6 +543,51 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     },
     [currentCompanyId, refreshTenantDataFromServer]
   );
+
+  // Hydrate the authenticated tenant from the server. PostgreSQL is authoritative.
+  useEffect(() => {
+    if (!user?.companyId) return;
+    let cancelled = false;
+    const loadCompany = async () => {
+      try {
+        const res = await fetch(`/api/auth/companies/${encodeURIComponent(user.companyId)}`, { method: 'GET', headers: getAuthHeaders(), credentials: 'include' });
+        if (!res.ok) throw new Error(`Falha ao carregar empresa (${res.status})`);
+        const json = await res.json();
+        if (cancelled || !json?.company) return;
+        const serverCompany = json.company as any;
+        const normalized: Company = {
+          ...createDefaultCompany(user.companyId, serverCompany.name || 'Empresa', user.name),
+          ...serverCompany, id: user.companyId,
+          name: serverCompany.name || 'Empresa',
+          tradeName: serverCompany.tradeName || serverCompany.name || 'Empresa',
+          cnpj: serverCompany.cnpj || serverCompany.document || '',
+          city: serverCompany.city || '', state: serverCompany.state || '',
+          email: serverCompany.email || '', phone: serverCompany.phone || '',
+          ownerName: user.name || 'Proprietário',
+        };
+        setCompanies((prev) => [...prev.filter((c) => c.id !== user.companyId), normalized]);
+      } catch (err) { console.warn('[MOUTRYX APP] Não foi possível hidratar a empresa do servidor:', err); }
+    };
+    loadCompany();
+    return () => { cancelled = true; };
+  }, [user]);
+
+  // Persist company settings only after the server confirms the update.
+  const updateCurrentCompany = useCallback(async (updates: Partial<Company>) => {
+    if (!user?.companyId || currentCompanyId !== user.companyId) throw new Error('Empresa atual inválida para atualização.');
+    const json = await apiSync(`/api/auth/companies/${encodeURIComponent(user.companyId)}`, 'PUT', {
+      name: updates.name, tradeName: updates.tradeName, document: updates.cnpj, cnpj: updates.cnpj,
+      city: updates.city, state: updates.state, email: updates.email, phone: updates.phone || updates.whatsapp,
+    });
+    if (!json?.company) throw new Error('O servidor não confirmou a atualização da empresa.');
+    const serverCompany = json.company as any;
+    const normalized: Company = { ...currentCompany, ...serverCompany, id: user.companyId,
+      name: serverCompany.name || currentCompany.name, tradeName: serverCompany.tradeName || serverCompany.name || currentCompany.tradeName,
+      cnpj: serverCompany.cnpj || serverCompany.document || currentCompany.cnpj, city: serverCompany.city ?? currentCompany.city,
+      state: serverCompany.state ?? currentCompany.state, email: serverCompany.email ?? currentCompany.email, phone: serverCompany.phone ?? currentCompany.phone };
+    setCompanies((prev) => [...prev.filter((c) => c.id !== user.companyId), normalized]);
+    return normalized;
+  }, [user?.companyId, currentCompanyId, currentCompany, apiSync]);
 
   useEffect(() => {
     if (user && currentCompanyId) {
@@ -2580,6 +2615,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       value={{
         currentCompany,
         setCurrentCompanyId,
+        updateCurrentCompany,
         companies: visibleCompanies,
         isSuperAdmin,
         currentUserRole,

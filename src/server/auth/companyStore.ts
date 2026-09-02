@@ -259,17 +259,16 @@ export class PostgresCompanyRepositoryAdapter implements ICompanyRepository {
     for (const comp of allCompaniesToSeed) {
       if (!comp || !comp.id) continue;
       await query(
-        `INSERT INTO companies (id, name, trade_name, document, email, phone, active, created_at, updated_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        `INSERT INTO companies (id, name, trade_name, document, city, state, plan, email, phone, active, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
          ON CONFLICT (id) DO NOTHING`,
         [
           comp.id,
           comp.name,
           comp.tradeName || comp.name,
           comp.document || comp.cnpj || null,
-          comp.email || null,
-          comp.phone || null,
-          comp.active !== false,
+          comp.city || null, comp.state || null, comp.plan || null,
+          comp.email || null, comp.phone || null, comp.active !== false,
           comp.createdAt || new Date(),
           comp.updatedAt || new Date(),
         ]
@@ -280,7 +279,7 @@ export class PostgresCompanyRepositoryAdapter implements ICompanyRepository {
   async findById(id: string, executor?: DbExecutor): Promise<StoredCompany | null> {
     const exec = executor || { query };
     const res = await exec.query(
-      `SELECT id, name, trade_name AS "tradeName", document, document AS cnpj, email, phone, active, 
+      `SELECT id, name, trade_name AS "tradeName", document, document AS cnpj, city, state, plan, email, phone, active, 
               created_at AS "createdAt", updated_at AS "updatedAt"
        FROM companies WHERE id = $1`,
       [id]
@@ -292,7 +291,7 @@ export class PostgresCompanyRepositoryAdapter implements ICompanyRepository {
   async getAll(executor?: DbExecutor): Promise<StoredCompany[]> {
     const exec = executor || { query };
     const res = await exec.query(
-      `SELECT id, name, trade_name AS "tradeName", document, document AS cnpj, email, phone, active, 
+      `SELECT id, name, trade_name AS "tradeName", document, document AS cnpj, city, state, plan, email, phone, active, 
               created_at AS "createdAt", updated_at AS "updatedAt"
        FROM companies ORDER BY name ASC`
     );
@@ -317,11 +316,11 @@ export class PostgresCompanyRepositoryAdapter implements ICompanyRepository {
     const doc = (data.cnpj || data.document || '').trim();
 
     const res = await exec.query(
-      `INSERT INTO companies (id, name, trade_name, document, email, phone, active, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, TRUE, $7, $7)
-       RETURNING id, name, trade_name AS "tradeName", document, document AS cnpj, email, phone, active, 
+      `INSERT INTO companies (id, name, trade_name, document, city, state, plan, email, phone, active, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, TRUE, $10, $10)
+       RETURNING id, name, trade_name AS "tradeName", document, document AS cnpj, city, state, plan, email, phone, active, 
                  created_at AS "createdAt", updated_at AS "updatedAt"`,
-      [id, data.name.trim(), data.tradeName?.trim() || null, doc || null, data.email?.trim() || null, data.phone?.trim() || null, now]
+      [id, data.name.trim(), data.tradeName?.trim() || null, doc || null, data.city?.trim() || null, data.state?.trim() || null, data.plan?.trim() || null, data.email?.trim() || null, data.phone?.trim() || null, now]
     );
 
     return res.rows[0];
@@ -345,6 +344,9 @@ export class PostgresCompanyRepositoryAdapter implements ICompanyRepository {
       fields.push(`document = $${idx++}`);
       values.push(updates.document);
     }
+    if (updates.city !== undefined) { fields.push(`city = $${idx++}`); values.push(updates.city); }
+    if (updates.state !== undefined) { fields.push(`state = $${idx++}`); values.push(updates.state); }
+    if (updates.plan !== undefined) { fields.push(`plan = $${idx++}`); values.push(updates.plan); }
     if (updates.email !== undefined) {
       fields.push(`email = $${idx++}`);
       values.push(updates.email);
@@ -367,7 +369,7 @@ export class PostgresCompanyRepositoryAdapter implements ICompanyRepository {
 
     values.push(id);
     const sql = `UPDATE companies SET ${fields.join(', ')} WHERE id = $${idx} 
-                 RETURNING id, name, trade_name AS "tradeName", document, email, phone, active, 
+                 RETURNING id, name, trade_name AS "tradeName", document, city, state, plan, email, phone, active, 
                            created_at AS "createdAt", updated_at AS "updatedAt"`;
 
     const res = await exec.query(sql, values);
