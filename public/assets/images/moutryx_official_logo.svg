@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 480" width="100%" height="100%" fill="none">
+  <!-- MOUTRYX Official Institutional Logo -->
+  <g>
+    <!-- Letters MOUTRY -->
+    <!-- M -->
+    <path d="M 40 300 L 40 140 L 95 140 L 140 220 L 185 140 L 240 140 L 240 300 L 195 300 L 195 200 L 155 270 L 125 270 L 85 200 L 85 300 Z" fill="#05521F" />
+    
+    <!-- O -->
+    <path d="M 260 220 C 260 165 285 135 340 135 C 395 135 420 165 420 220 C 420 275 395 305 340 305 C 285 305 260 275 260 220 Z M 305 220 C 305 255 318 268 340 268 C 362 268 375 255 375 220 C 375 185 362 172 340 172 C 318 172 305 185 305 220 Z" fill="#05521F" />
+
+    <!-- U -->
+    <path d="M 440 140 L 485 140 L 485 240 C 485 260 495 270 515 270 C 535 270 545 260 545 240 L 545 140 L 590 140 L 590 240 C 590 282 565 305 515 305 C 465 305 440 282 440 240 Z" fill="#05521F" />
+
+    <!-- T -->
+    <path d="M 605 140 L 730 140 L 730 177 L 690 177 L 690 300 L 645 300 L 645 177 L 605 177 Z" fill="#05521F" />
+
+    <!-- R -->
+    <path d="M 745 140 L 845 140 C 885 140 905 155 905 190 C 905 215 890 230 865 235 L 910 300 L 860 300 L 820 245 L 790 245 L 790 300 L 745 300 Z M 790 175 L 790 215 L 840 215 C 855 215 862 208 862 195 C 862 182 855 175 840 175 Z" fill="#05521F" />
+
+    <!-- Y -->
+    <path d="M 915 140 L 965 140 L 1005 215 L 1045 140 L 1095 140 L 1030 245 L 1030 300 L 985 300 L 985 245 Z" fill="#05521F" />
+
+    <!-- X WITH AGRO LEAF SWOOSH -->
+    <!-- Top-Left to Bottom-Right -->
+    <path d="M 1035 140 L 1080 140 L 1150 240 L 1180 300 L 1130 300 L 1095 245 Z" fill="#05521F" />
+    <!-- Dynamic Arc Stem -->
+    <path d="M 975 350 C 1030 280 1100 200 1155 145 C 1140 180 1085 250 1025 320 Z" fill="#05521F" />
+    <!-- Top-Right Leg -->
+    <path d="M 1120 140 L 1165 140 L 1135 190 L 1095 190 Z" fill="#05521F" />
+
+    <!-- Leaf 1 (Top) -->
+    <path d="M 1155 140 C 1160 90 1195 65 1220 70 C 1225 95 1205 135 1165 148 C 1155 144 1153 142 1155 140 Z" fill="#2E7D32" />
+    <path d="M 1157 142 Q 1188 100 1218 72" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" />
+
+    <!-- Leaf 2 (Right) -->
+    <path d="M 1170 155 C 1200 150 1238 165 1238 190 C 1213 200 1180 190 1165 162 Z" fill="#2E7D32" />
+    <path d="M 1168 159 Q 1202 172 1235 188" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" />
+
+    <!-- Subtitle: GESTÃO AEROAGRÍCOLA -->
+    <rect x="40" y="360" width="70" height="5" rx="2.5" fill="#05521F" />
+    <text x="575" y="368" text-anchor="middle" fill="#05521F" font-size="24" font-weight="800" font-family="system-ui, -apple-system, sans-serif" letter-spacing="0.45em">
+      GESTÃO AEROAGRÍCOLA
+    </text>
+    <rect x="1040" y="360" width="70" height="5" rx="2.5" fill="#05521F" />
+  </g>
+</svg>

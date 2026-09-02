@@ -1,0 +1,6 @@
+{
+  "name": "MOUTRYX - Gestão Aeroagrícola",
+  "description": "Plataforma SaaS de gestão operacional, financeira e agronômica para empresas de drones agrícolas, com módulo REATIVA focado em reativação inteligente e simplificada de clientes antigos.",
+  "requestFramePermissions": ["camera", "geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

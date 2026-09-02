@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 700" width="100%" height="100%" fill="none">
+  <defs>
+    <!-- Sharp clean brand color & subtle glow gradient -->
+    <linearGradient id="mtxBlueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00B4F5" />
+      <stop offset="100%" stop-color="#0096DC" />
+    </linearGradient>
+  </defs>
+
+  <!-- Group for MTX Brand Logo -->
+  <g fill="#00A3E0">
+    <!-- M -->
+    <path d="M 60 520 L 60 210 L 145 210 L 235 385 L 325 210 L 410 210 L 410 520 L 335 520 L 335 305 L 255 460 L 215 460 L 135 305 L 135 520 Z" />
+
+    <!-- T -->
+    <path d="M 440 210 L 730 210 L 730 280 L 620 280 L 620 520 L 550 520 L 550 280 L 440 280 Z" />
+
+    <!-- X & Dynamic Trajectory Swoosh -->
+    <!-- X Left diagonal bottom segment -->
+    <path d="M 740 520 L 840 375 L 895 440 L 835 520 Z" />
+    
+    <!-- X Right-to-Left diagonal (full back stroke) -->
+    <path d="M 950 210 L 1070 210 L 795 520 L 705 520 Z" />
+
+    <!-- X Top-Left diagonal top segment -->
+    <path d="M 885 210 L 985 210 L 910 305 L 825 210 Z" />
+
+    <!-- X Bottom-Right diagonal end -->
+    <path d="M 910 425 L 1000 520 L 1150 520 L 985 340 Z" />
+
+    <!-- Main Aerodynamic Flight Arc (Originating above T/M and curving across into X) -->
+    <path d="M 420 180 C 580 120 820 115 1010 265 C 1040 290 1065 315 1090 350 C 1055 315 1000 270 940 235 C 810 155 600 150 420 180 Z" />
+
+    <!-- Inner swoosh loop & aerodynamic wake cut through X -->
+    <path d="M 810 270 C 890 315 970 395 1010 460 C 970 410 900 345 830 310 C 800 295 805 280 810 270 Z" />
+    <path d="M 800 340 C 840 380 885 450 910 500 C 880 460 835 410 790 380 C 780 372 785 355 800 340 Z" />
+  </g>
+</svg>

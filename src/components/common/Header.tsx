@@ -1,0 +1,493 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { useApp } from '../../context/AppContext';
+import { useAuth } from '../../context/AuthContext';
+import { UserRole } from '../../types';
+import { formatCurrency } from '../../utils/formatters';
+import { MoutryxLogo } from './MoutryxLogo';
+import {
+  Search,
+  Bell,
+  Sparkles,
+  Smartphone,
+  Building2,
+  Menu,
+  AlertTriangle,
+  CheckCircle2,
+  Clock,
+  FileText,
+  DollarSign,
+  ChevronDown,
+  LogOut,
+} from 'lucide-react';
+
+interface HeaderProps {
+  onOpenMobileMenu?: () => void;
+  onOpenNewQuote?: () => void;
+  onOpenNewOS?: () => void;
+  onOpenCopilot?: () => void;
+}
+
+export const Header: React.FC<HeaderProps> = ({
+  onOpenMobileMenu,
+  onOpenNewQuote,
+  onOpenNewOS,
+  onOpenCopilot,
+}) => {
+  const {
+    currentCompany,
+    companies,
+    setCurrentCompanyId,
+    currentUserRole,
+    setCurrentUserRole,
+    currentUserName,
+    isFieldMode,
+    setIsFieldMode,
+    setIsSearchOpen,
+    accountsReceivable,
+    batteries,
+    documents,
+    pilotCommissions,
+    activeTab,
+    setActiveTab,
+  } = useApp();
+
+  const { user: authUser, logout } = useAuth();
+
+  const [isAlertsOpen, setIsAlertsOpen] = useState(false);
+  const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
+  const [isCompanyDropdownOpen, setIsCompanyDropdownOpen] = useState(false);
+
+  const alertsRef = useRef<HTMLDivElement>(null);
+  const roleRef = useRef<HTMLDivElement>(null);
+  const companyRef = useRef<HTMLDivElement>(null);
+
+  // Close all open menus when active tab / view changes
+  useEffect(() => {
+    setIsAlertsOpen(false);
+    setIsRoleDropdownOpen(false);
+    setIsCompanyDropdownOpen(false);
+  }, [activeTab]);
+
+  // Global Outside-Click & Touch listener: CLIQUE FORA = FECHAR
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node;
+      if (isAlertsOpen && alertsRef.current && !alertsRef.current.contains(target)) {
+        setIsAlertsOpen(false);
+      }
+      if (isRoleDropdownOpen && roleRef.current && !roleRef.current.contains(target)) {
+        setIsRoleDropdownOpen(false);
+      }
+      if (isCompanyDropdownOpen && companyRef.current && !companyRef.current.contains(target)) {
+        setIsCompanyDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [isAlertsOpen, isRoleDropdownOpen, isCompanyDropdownOpen]);
+
+  const toggleAlerts = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsAlertsOpen((prev) => {
+      if (!prev) {
+        setIsRoleDropdownOpen(false);
+        setIsCompanyDropdownOpen(false);
+      }
+      return !prev;
+    });
+  };
+
+  const toggleRole = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsRoleDropdownOpen((prev) => {
+      if (!prev) {
+        setIsAlertsOpen(false);
+        setIsCompanyDropdownOpen(false);
+      }
+      return !prev;
+    });
+  };
+
+  const toggleCompany = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsCompanyDropdownOpen((prev) => {
+      if (!prev) {
+        setIsAlertsOpen(false);
+        setIsRoleDropdownOpen(false);
+      }
+      return !prev;
+    });
+  };
+
+  // Derive active notifications
+  const overdueReceivables = accountsReceivable.filter((r) => r.status === 'vencido');
+  const criticalBatteries = batteries.filter((b) => b.condition === 'atencao' || b.condition === 'limite_atingido');
+  const expiringDocs = documents.filter((d) => d.status === 'vencendo' || d.status === 'vencido');
+  const releasedCommissions = pilotCommissions.filter((c) => c.status === 'liberada');
+
+  const totalAlerts =
+    overdueReceivables.length +
+    criticalBatteries.length +
+    expiringDocs.length +
+    releasedCommissions.length;
+
+  const roleLabels: Record<UserRole, { title: string; badgeClass: string }> = {
+    super_admin: { title: 'Super Admin', badgeClass: 'bg-purple-900/60 text-purple-300 border-purple-700' },
+    proprietario: { title: 'Proprietário', badgeClass: 'bg-emerald-900/60 text-emerald-300 border-emerald-700' },
+    administrador: { title: 'Administrador', badgeClass: 'bg-blue-900/60 text-blue-300 border-blue-700' },
+    gestor_operacional: { title: 'Gestor Operacional', badgeClass: 'bg-cyan-900/60 text-cyan-300 border-cyan-700' },
+    piloto: { title: 'Piloto / Campo', badgeClass: 'bg-amber-900/60 text-amber-300 border-amber-700' },
+    financeiro: { title: 'Financeiro', badgeClass: 'bg-teal-900/60 text-teal-300 border-teal-700' },
+    consultor: { title: 'Consultor (Leitura)', badgeClass: 'bg-slate-800 text-slate-300 border-slate-700' },
+  };
+
+  return (
+    <header className="sticky top-0 z-40 flex h-16 w-full items-center justify-between border-b border-[#E2E8E5] bg-white px-4 lg:px-6 text-[#263238] shadow-2xs">
+      {/* Left: Mobile Toggle & Brand */}
+      <div className="flex items-center gap-3">
+        <button
+          onClick={onOpenMobileMenu}
+          className="lg:hidden rounded-lg p-2 text-[#718096] hover:bg-[#F0F4F1] hover:text-[#263238] transition-colors cursor-pointer"
+          title="Abrir Menu"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+
+        <MoutryxLogo
+          variant="horizontal"
+          size="sm"
+          onClick={() => setActiveTab('dashboard')}
+          className="flex lg:hidden cursor-pointer"
+        />
+
+        {/* Company / Multi-tenant Indicator & Switcher */}
+        <div ref={companyRef} className="relative ml-2 hidden md:block">
+          <button
+            onClick={toggleCompany}
+            className="flex items-center gap-2 rounded-xl bg-[#F0F4F1] px-3 py-1.5 text-xs font-semibold text-[#263238] border border-[#E2E8E5] hover:bg-[#E8F3EC] hover:border-[#B7D8C1] transition-colors cursor-pointer"
+            title={authUser?.role === 'super_admin' ? 'Painel Master de Gestão Multi-Tenant' : 'Ambiente Exclusivo da Assinatura'}
+          >
+            <Building2 className="h-3.5 w-3.5 text-[#05521F]" />
+            <span className="max-w-[150px] truncate">{currentCompany.tradeName || currentCompany.name}</span>
+            {authUser?.role === 'super_admin' ? (
+              <span className="rounded bg-purple-100 px-1 py-0.2 text-[9px] font-bold text-purple-700 border border-purple-200">
+                Master
+              </span>
+            ) : (
+              <span className="flex h-1.5 w-1.5 rounded-full bg-[#16A34A]" title="Tenant Conectado" />
+            )}
+            <ChevronDown className={`h-3 w-3 text-[#718096] transition-transform ${isCompanyDropdownOpen ? 'rotate-180' : ''}`} />
+          </button>
+
+          {isCompanyDropdownOpen && (
+            <div className="absolute left-0 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-xl border border-[#E2E8E5] bg-white p-2.5 shadow-xl z-50 animate-fadeIn">
+              <div className="flex items-center justify-between px-2 py-1 border-b border-[#E2E8E5] pb-2">
+                <span className="text-[11px] font-bold text-[#718096] uppercase tracking-wider">
+                  Alternar Empresa (Tenant)
+                </span>
+                {authUser?.role === 'super_admin' ? (
+                  <span className="text-[9px] font-bold text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">
+                    MOUTRYX Admin
+                  </span>
+                ) : (
+                  <span className="text-[9px] font-bold text-[#05521F] bg-[#E8F3EC] px-1.5 py-0.5 rounded border border-[#B7D8C1]">
+                    SaaS Ativo
+                  </span>
+                )}
+              </div>
+
+              {/* If MOUTRYX Super Admin, allow multi-tenant switching. If regular customer, show ONLY their single linked tenant */}
+              {authUser?.role === 'super_admin' ? (
+                <div className="mt-2 space-y-1 max-h-60 overflow-y-auto">
+                  {companies.map((c) => (
+                    <button
+                      key={c.id}
+                      onClick={() => {
+                        setCurrentCompanyId(c.id);
+                        setIsCompanyDropdownOpen(false);
+                      }}
+                      className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-xs transition-colors cursor-pointer ${
+                        c.id === currentCompany.id
+                          ? 'bg-[#E8F3EC] text-[#05521F] font-bold'
+                          : 'text-[#52636B] hover:bg-[#F0F4F1] hover:text-[#263238]'
+                      }`}
+                    >
+                      <div className="truncate">
+                        <p className="truncate font-semibold">{c.name}</p>
+                        <p className="text-[10px] text-[#718096]">{c.city}/{c.state} • CNPJ: {c.cnpj ? c.cnpj.substring(0, 10) + '...' : 'N/A'}</p>
+                      </div>
+                      {c.id === currentCompany.id && <CheckCircle2 className="h-4 w-4 text-[#05521F] shrink-0" />}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="mt-2 space-y-2">
+                  <div className="rounded-lg bg-[#E8F3EC] p-2.5 text-[#263238] font-medium shadow-xs border border-[#B7D8C1]">
+                    <div className="flex items-center justify-between">
+                      <p className="font-bold text-xs truncate text-[#05521F]">{currentCompany.name}</p>
+                      <CheckCircle2 className="h-4 w-4 text-[#16A34A] shrink-0 ml-1" />
+                    </div>
+                    <p className="text-[10px] text-[#718096] mt-0.5">
+                      {currentCompany.city}/{currentCompany.state} {currentCompany.cnpj ? `• CNPJ: ${currentCompany.cnpj}` : ''}
+                    </p>
+                    <span className="inline-block mt-1.5 text-[9px] font-bold text-[#05521F] bg-white px-2 py-0.5 rounded border border-[#B7D8C1]">
+                      ✓ Empresa Vinculada (Ambiente Exclusivo)
+                    </span>
+                  </div>
+
+                  <div className="rounded-lg bg-[#F0F4F1] p-2 text-[10px] text-[#718096] border border-[#E2E8E5] space-y-1">
+                    <p className="font-semibold text-[#263238] flex items-center gap-1">
+                      <span className="text-[#05521F]">🔒</span> Ambiente exclusivo da sua empresa
+                    </p>
+                    <p className="text-[#718096] leading-relaxed">
+                      Seus dados e operações ficam protegidos em um ambiente separado e seguro.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Center: Global Search Bar */}
+      <div className="flex-1 max-w-md mx-4 hidden lg:block">
+        <button
+          onClick={() => setIsSearchOpen(true)}
+          className="flex w-full items-center justify-between rounded-xl border border-[#E2E8E5] bg-[#F0F4F1] px-3.5 py-1.5 text-xs text-[#718096] hover:border-[#05521F]/40 hover:bg-white hover:text-[#263238] transition-all cursor-pointer shadow-2xs"
+        >
+          <div className="flex items-center gap-2">
+            <Search className="h-4 w-4 text-[#718096]" />
+            <span>Buscar clientes, talhões, drones, pilotos, OS, orçamentos...</span>
+          </div>
+          <kbd className="rounded border border-[#E2E8E5] bg-white px-1.5 py-0.5 text-[10px] font-mono text-[#718096]">
+            Ctrl+K
+          </kbd>
+        </button>
+      </div>
+
+      {/* Right Controls */}
+      <div className="flex items-center gap-2 sm:gap-3">
+        {/* Mobile Search Button */}
+        <button
+          onClick={() => setIsSearchOpen(true)}
+          className="lg:hidden rounded-lg p-2 text-[#718096] hover:bg-[#F0F4F1] hover:text-[#263238] transition-colors cursor-pointer"
+          title="Pesquisa Global"
+        >
+          <Search className="h-5 w-5" />
+        </button>
+
+        {/* Quick Copilot AI Button */}
+        <button
+          onClick={onOpenCopilot}
+          className="flex items-center gap-1.5 rounded-xl bg-[#05521F] hover:bg-[#0B6B32] px-3 py-1.5 text-xs font-semibold text-white shadow-2xs transition-colors cursor-pointer"
+          title="Pergunte ao Copiloto MOUTRYX (Inteligência Aeroagrícola)"
+        >
+          <Sparkles className="h-3.5 w-3.5 text-white" />
+          <span className="hidden sm:inline">Copiloto IA</span>
+        </button>
+
+        {/* Field Mode Toggle (Mobile / Tablet / Pilot) */}
+        <button
+          onClick={() => {
+            setIsFieldMode(!isFieldMode);
+            if (!isFieldMode) setActiveTab('modo_campo');
+            else setActiveTab('dashboard');
+          }}
+          className={`flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-medium border transition-colors cursor-pointer ${
+            isFieldMode
+              ? 'bg-[#05521F] text-white border-[#05521F] font-bold shadow-2xs'
+              : 'bg-[#E8F3EC] text-[#05521F] border-[#B7D8C1] hover:bg-[#B7D8C1]/30'
+          }`}
+          title="Alternar Modo Campo (Otimizado para Piloto no Celular)"
+        >
+          <Smartphone className="h-3.5 w-3.5" />
+          <span className="hidden md:inline">{isFieldMode ? 'Modo Campo Ativo' : 'Modo Campo'}</span>
+        </button>
+
+        {/* Notifications & Alerts Bell */}
+        <div ref={alertsRef} className="relative">
+          <button
+            onClick={toggleAlerts}
+            className="relative rounded-lg p-2 text-[#718096] hover:bg-[#F0F4F1] hover:text-[#263238] transition-colors cursor-pointer"
+            title="Central de Alertas e Notificações"
+          >
+            <Bell className="h-5 w-5" />
+            {totalAlerts > 0 && (
+              <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#DC2626] text-[10px] font-bold text-white shadow-xs">
+                {totalAlerts}
+              </span>
+            )}
+          </button>
+
+          {isAlertsOpen && (
+            <div className="absolute right-0 mt-2 w-80 sm:w-96 max-w-[calc(100vw-1.5rem)] rounded-xl border border-[#E2E8E5] bg-white p-3 shadow-xl z-50 animate-fadeIn">
+              <div className="flex items-center justify-between pb-2 border-b border-[#E2E8E5]">
+                <div className="flex items-center gap-1.5">
+                  <Bell className="h-4 w-4 text-[#05521F]" />
+                  <h4 className="text-xs font-bold text-[#263238] uppercase tracking-wider">Alertas Operacionais</h4>
+                </div>
+                <span className="text-[11px] font-semibold text-[#718096]">{totalAlerts} pendentes</span>
+              </div>
+
+              <div className="mt-2 max-h-80 space-y-2 overflow-y-auto pr-1">
+                {overdueReceivables.map((rec) => (
+                  <div
+                    key={rec.id}
+                    onClick={() => {
+                      setActiveTab('financeiro');
+                      setIsAlertsOpen(false);
+                    }}
+                    className="flex items-start gap-2.5 rounded-lg border border-red-200 bg-red-50 p-2.5 text-xs text-red-900 cursor-pointer hover:bg-red-100 transition-colors"
+                  >
+                    <AlertTriangle className="h-4 w-4 text-[#DC2626] shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-bold text-red-950">🔴 Conta Vencida: {formatCurrency(rec.amount)}</p>
+                      <p className="text-[11px] text-red-700">{rec.clientName} • Venceu em {rec.dueDate}</p>
+                    </div>
+                  </div>
+                ))}
+
+                {releasedCommissions.map((comm) => (
+                  <div
+                    key={comm.id}
+                    onClick={() => {
+                      setActiveTab('comissoes');
+                      setIsAlertsOpen(false);
+                    }}
+                    className="flex items-start gap-2.5 rounded-lg border border-emerald-200 bg-emerald-50 p-2.5 text-xs text-emerald-900 cursor-pointer hover:bg-emerald-100 transition-colors"
+                  >
+                    <DollarSign className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-bold text-emerald-950">💰 Comissão Liberada: {formatCurrency(comm.commissionAmount)}</p>
+                      <p className="text-[11px] text-emerald-700">Piloto: {comm.pilotName} • {comm.osNumber}</p>
+                    </div>
+                  </div>
+                ))}
+
+                {criticalBatteries.map((bat) => (
+                  <div
+                    key={bat.id}
+                    onClick={() => {
+                      setActiveTab('drones');
+                      setIsAlertsOpen(false);
+                    }}
+                    className="flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-900 cursor-pointer hover:bg-amber-100 transition-colors"
+                  >
+                    <Clock className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-bold text-amber-950">🟠 {bat.identifier}: {bat.cycles} Ciclos</p>
+                      <p className="text-[11px] text-amber-700">{bat.notes || 'Atingiu limite recomendado de ciclos.'}</p>
+                    </div>
+                  </div>
+                ))}
+
+                {expiringDocs.map((doc) => (
+                  <div
+                    key={doc.id}
+                    onClick={() => {
+                      setActiveTab('documentos');
+                      setIsAlertsOpen(false);
+                    }}
+                    className="flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-900 cursor-pointer hover:bg-amber-100 transition-colors"
+                  >
+                    <FileText className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-bold text-amber-950">🟡 Documento Vencendo</p>
+                      <p className="text-[11px] text-amber-700">{doc.title} ({doc.relatedName})</p>
+                    </div>
+                  </div>
+                ))}
+
+                {totalAlerts === 0 && (
+                  <div className="py-6 text-center text-xs text-[#718096]">
+                    <CheckCircle2 className="mx-auto h-7 w-7 text-[#22C55E] mb-1.5 opacity-90" />
+                    Nenhum alerta crítico no momento. Operação normal.
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* User Role / Profile Simulation Dropdown */}
+        <div ref={roleRef} className="relative">
+          <button
+            onClick={toggleRole}
+            className="flex items-center gap-2 rounded-xl bg-[#F0F4F1] px-2.5 py-1.5 text-xs border border-[#E2E8E5] hover:bg-[#E8F3EC] hover:border-[#05521F]/40 transition-colors cursor-pointer"
+          >
+            <div className="h-6 w-6 rounded-full bg-[#05521F] flex items-center justify-center text-white font-bold text-xs">
+              {currentUserName.charAt(0)}
+            </div>
+            <div className="text-left hidden sm:block">
+              <p className="font-bold text-xs leading-none text-[#263238]">{currentUserName.split(' ')[0]}</p>
+              <span className={`inline-block mt-0.5 text-[9px] px-1.5 py-0.2 rounded border ${roleLabels[currentUserRole]?.badgeClass || ''}`}>
+                {roleLabels[currentUserRole]?.title}
+              </span>
+            </div>
+            <ChevronDown className={`h-3 w-3 text-[#718096] transition-transform ${isRoleDropdownOpen ? 'rotate-180' : ''}`} />
+          </button>
+
+          {isRoleDropdownOpen && (
+            <div className="absolute right-0 mt-2 w-72 max-w-[calc(100vw-1.5rem)] rounded-xl border border-[#E2E8E5] bg-white p-2 shadow-xl z-50 animate-fadeIn">
+              {authUser && (
+                <div className="p-2 mb-2 rounded-lg bg-[#F0F4F1] border border-[#E2E8E5]">
+                  <div className="flex items-center gap-2">
+                    <div className="h-8 w-8 rounded-full bg-[#05521F] flex items-center justify-center text-white font-bold text-xs">
+                      {authUser.name.charAt(0)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-bold text-xs text-[#263238] truncate">{authUser.name}</p>
+                      <p className="text-[10px] text-[#718096] truncate">{authUser.email}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="px-2 py-1 text-[11px] font-bold text-[#718096] uppercase tracking-wider">
+                Simular Perfil / Permissão
+              </div>
+              {(Object.keys(roleLabels) as UserRole[]).map((role) => (
+                <button
+                  key={role}
+                  onClick={() => {
+                    setCurrentUserRole(role);
+                    setIsRoleDropdownOpen(false);
+                    if (role === 'piloto') setIsFieldMode(true);
+                  }}
+                  className={`flex w-full items-center justify-between rounded-lg px-3 py-1.5 text-left text-xs transition-colors cursor-pointer ${
+                    currentUserRole === role
+                      ? 'bg-[#E8F3EC] text-[#05521F] font-bold'
+                      : 'text-[#52636B] hover:bg-[#F0F4F1] hover:text-[#263238]'
+                  }`}
+                >
+                  <span>{roleLabels[role].title}</span>
+                  {currentUserRole === role && <CheckCircle2 className="h-3.5 w-3.5 text-[#05521F]" />}
+                </button>
+              ))}
+
+              <div className="mt-2 pt-2 border-t border-[#E2E8E5]">
+                <button
+                  id="btn-header-logout"
+                  onClick={async () => {
+                    setIsRoleDropdownOpen(false);
+                    await logout();
+                  }}
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                  <span>Encerrar Sessão (Logout)</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </header>
+  );
+};
