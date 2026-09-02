@@ -192,7 +192,7 @@ export function generateServiceOrderPdfVector(
   doc.text(`Cultura: ${cropStr} • Área: ${os.areaHa} ${areaUnitStr}`, 14 + colWidth + 4, y + 19);
 
   const rawDate = os.scheduledDate || 'A definir';
-  const scheduledTimeStr = os.scheduledTime || '06:30';
+  const scheduledTimeStr = os.scheduledTime || 'Não informado';
   doc.text(`Data/Hora Agendada: ${rawDate} às ${scheduledTimeStr}`, 14 + colWidth + 4, y + 25);
 
   doc.text(`Piloto Responsável: ${os.pilotName || 'Não informado'}`, 14 + colWidth + 4, y + 31);
@@ -265,7 +265,7 @@ export function generateServiceOrderPdfVector(
   ]);
 
   if (productRows.length === 0) {
-    productRows.push(['Calda padrão / Insumos fornecidos pelo cliente', '-', 'Geral', '10 L/ha', '-']);
+    productRows.push(['Não informado', '-', '-', '-', '-']);
   }
 
   autoTable(doc, {
@@ -295,7 +295,7 @@ export function generateServiceOrderPdfVector(
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(15, 23, 42);
 
-  const paymentStr = os.paymentMethod || (os.paymentTerms ? os.paymentTerms : 'PIX');
+  const paymentStr = os.paymentMethod || os.paymentTerms || 'Não informado';
   const harvestDateStr = (os.paymentMethod === 'PAGAMENTO SAFRA' && os.harvestPaymentDate)
     ? ` • Data Prevista Safra: ${os.harvestPaymentDate.split('-').reverse().join('/')}`
     : '';
@@ -652,7 +652,10 @@ export function openPrintableTab(elementId: string, title: string = 'Documento M
 </html>
   `;
 
-  const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
-  const blobUrl = URL.createObjectURL(blob);
-  window.open(blobUrl, '_blank');
+  const printWindow = window.open('', '_blank');
+  if (!printWindow) throw new Error('Não foi possível abrir a janela de impressão.');
+  printWindow.document.open();
+  printWindow.document.write(htmlContent);
+  printWindow.document.close();
+  printWindow.focus();
 }

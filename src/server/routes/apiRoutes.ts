@@ -780,6 +780,19 @@ apiRouter.post('/reimbursements', requirePermission('reimbursements.create'), as
   return res.status(201).json({ success: true, data: created });
 });
 
+apiRouter.put('/reimbursements/:id', requirePermission('reimbursements.update'), async (req: AuthenticatedRequest, res: Response) => {
+  const companyId = req.effectiveCompanyId!;
+  try {
+    const updated = await receiptNoteRepository.update(req.params.id, req.body || {}, companyId);
+    if (!updated) return res.status(404).json({ error: 'Notinha não encontrada no tenant ativo.' });
+    return res.json({ success: true, data: updated });
+  } catch (err: any) {
+    console.error('[API] /api/reimbursements update error:', err);
+    const sanitized = sanitizeClientErrorMessage(err, 400);
+    return res.status(400).json({ error: sanitized.error, code: sanitized.code });
+  }
+});
+
 // PATCH /api/reimbursements/:id/approve
 apiRouter.patch('/reimbursements/:id/approve', requirePermission('reimbursements.approve'), async (req: AuthenticatedRequest, res: Response) => {
   const companyId = req.effectiveCompanyId!;

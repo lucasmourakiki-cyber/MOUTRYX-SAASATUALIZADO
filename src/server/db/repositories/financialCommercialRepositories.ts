@@ -1353,6 +1353,21 @@ export const receiptNoteRepository = {
     return note;
   },
 
+  async update(id: string, updates: Partial<ReceiptNote>, companyId: string, tx?: DbExecutor): Promise<ReceiptNote | null> {
+    const fields: Record<string,string> = { pilotId:'pilot_id', pilotName:'pilot_name', date:'date', time:'time', establishmentName:'establishment_name', cnpj:'cnpj', category:'category', totalAmount:'total_amount', paymentMethod:'payment_method', reimbursementStatus:'reimbursement_status', relatedOsId:'related_os_id', relatedOsNumber:'related_os_number', relatedPropertyName:'related_property_name', fuelDetails:'fuel_details', items:'items', imageUrl:'image_url', confidenceScore:'confidence_score', notes:'notes' };
+    const entries=Object.entries(updates || {}).filter(([k]) => Object.prototype.hasOwnProperty.call(fields,k));
+    if (!entries.length) return this.getById(id, companyId, tx);
+    if (isDatabaseConfigured()) {
+      const dbQuery=tx ? tx.query.bind(tx) : query; const values:any[]=[];
+      const sets=entries.map(([k,v],i)=>{ values.push(k==='fuelDetails'||k==='items'?JSON.stringify(v):v); return `${fields[k]}=$${i+1}`; });
+      values.push(id,companyId);
+      const r=await dbQuery(`UPDATE receipt_notes SET ${sets.join(', ')}, updated_at=CURRENT_TIMESTAMP WHERE id=$${values.length-1} AND company_id=$${values.length} RETURNING *`, values);
+      if(!r.rows.length) return null; const row:any=r.rows[0]; return row as ReceiptNote;
+    }
+    const idx=devReceiptNotes.findIndex(n=>n.id===id && n.companyId===companyId);
+    if(idx<0) return null; devReceiptNotes[idx]={...devReceiptNotes[idx],...updates}; return devReceiptNotes[idx];
+  },
+
   async updateReimbursement(id: string, status: ReceiptNote['reimbursementStatus'], companyId: string, currentVersion?: number, tx?: DbExecutor): Promise<boolean> {
     const now = new Date().toISOString();
 

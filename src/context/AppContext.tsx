@@ -259,8 +259,8 @@ const createDefaultCompany = (id: string, name?: string, ownerName?: string): Co
     tradeName: companyName,
     cnpj: '',
     address: '',
-    city: 'Sinop',
-    state: 'MT',
+    city: '',
+    state: '',
     zipCode: '',
     phone: '',
     whatsapp: '',
@@ -284,13 +284,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const isSuperAdmin = user?.role === 'super_admin';
 
   // Company & Multi-tenant State
-  const [companies, setCompanies] = useState<Company[]>(() => {
-    return getStoredItem('moutryx_companies', 'droneia_companies', INITIAL_COMPANIES);
-  });
-  const [currentCompanyId, setCurrentCompanyIdState] = useState<string>(() => {
-    const loadedCompanies = getStoredItem('moutryx_companies', 'droneia_companies', INITIAL_COMPANIES);
-    return getStoredCompanyId(loadedCompanies);
-  });
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [currentCompanyId, setCurrentCompanyIdState] = useState<string>('');
 
   // Strict SaaS Multi-Tenant Isolation:
   // When an authenticated non-super_admin logs in, strictly anchor their tenant to user.companyId
@@ -344,27 +339,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
 
   // Entities (Loaded from server / memory defaults — strictly not cached in localStorage)
-  const [allPilots, setAllPilots] = useState<Pilot[]>(INITIAL_PILOTS);
-  const [allDrones, setAllDrones] = useState<Drone[]>(INITIAL_DRONES);
-  const [allBatteries, setAllBatteries] = useState<Battery[]>(INITIAL_BATTERIES);
-  const [allMaintenanceRecords, setAllMaintenanceRecords] = useState<MaintenanceRecord[]>(INITIAL_MAINTENANCE_RECORDS);
-  const [allClients, setAllClients] = useState<Client[]>(INITIAL_CLIENTS);
-  const [allProperties, setAllProperties] = useState<Property[]>(INITIAL_PROPERTIES);
-  const [allTalhoes, setAllTalhoes] = useState<Talhao[]>(INITIAL_TALHOES);
+  const [allPilots, setAllPilots] = useState<Pilot[]>([]);
+  const [allDrones, setAllDrones] = useState<Drone[]>([]);
+  const [allBatteries, setAllBatteries] = useState<Battery[]>([]);
+  const [allMaintenanceRecords, setAllMaintenanceRecords] = useState<MaintenanceRecord[]>([]);
+  const [allClients, setAllClients] = useState<Client[]>([]);
+  const [allProperties, setAllProperties] = useState<Property[]>([]);
+  const [allTalhoes, setAllTalhoes] = useState<Talhao[]>([]);
   const [crops, setCrops] = useState<Crop[]>(INITIAL_CROPS);
   const [products, setProducts] = useState<FitossanitarioProduct[]>(INITIAL_PRODUCTS);
-  const [allServiceOrders, setAllServiceOrders] = useState<ServiceOrder[]>(INITIAL_SERVICE_ORDERS);
-  const [allQuotes, setAllQuotes] = useState<Quote[]>(INITIAL_QUOTES);
-  const [allAccountsReceivable, setAllAccountsReceivable] = useState<AccountReceivable[]>(INITIAL_ACCOUNTS_RECEIVABLE);
-  const [allAccountsPayable, setAllAccountsPayable] = useState<AccountPayable[]>(INITIAL_ACCOUNTS_PAYABLE);
-  const [allPilotCommissions, setAllPilotCommissions] = useState<PilotCommissionRecord[]>(INITIAL_PILOT_COMMISSIONS);
+  const [allServiceOrders, setAllServiceOrders] = useState<ServiceOrder[]>([]);
+  const [allQuotes, setAllQuotes] = useState<Quote[]>([]);
+  const [allAccountsReceivable, setAllAccountsReceivable] = useState<AccountReceivable[]>([]);
+  const [allAccountsPayable, setAllAccountsPayable] = useState<AccountPayable[]>([]);
+  const [allPilotCommissions, setAllPilotCommissions] = useState<PilotCommissionRecord[]>([]);
   const [allOccurrences, setAllOccurrences] = useState<Occurrence[]>([]);
-  const [allDocuments, setAllDocuments] = useState<DocumentRecord[]>(INITIAL_DOCUMENTS);
-  const [allAuditLogs, setAllAuditLogs] = useState<AuditLog[]>(INITIAL_AUDIT_LOGS);
+  const [allDocuments, setAllDocuments] = useState<DocumentRecord[]>([]);
+  const [allAuditLogs, setAllAuditLogs] = useState<AuditLog[]>([]);
 
-  const [aiRecommendations] = useState<AIRecommendation[]>(INITIAL_AI_RECOMMENDATIONS);
+  const [aiRecommendations] = useState<AIRecommendation[]>([]);
 
-  const [allReceiptNotes, setAllReceiptNotes] = useState<ReceiptNote[]>(INITIAL_RECEIPT_NOTES);
+  const [allReceiptNotes, setAllReceiptNotes] = useState<ReceiptNote[]>([]);
 
   // UI & Theme persistence only (strictly no operational entities persisted to localStorage)
   // Persist currentCompanyId whenever it updates
@@ -400,7 +395,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const currentCompany = useMemo(() => {
     const found = companies.find((c) => c.id === currentCompanyId);
     if (found) return found;
-    return companies[0] || createDefaultCompany(currentCompanyId || 'comp-default', 'Organização');
+    return companies[0] || createDefaultCompany(currentCompanyId || 'tenant', 'Carregando empresa...');
   }, [companies, currentCompanyId, user]);
 
   // SaaS Multi-tenant visibility:
@@ -414,7 +409,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const myComp = companies.find((c) => c.id === targetId);
     if (myComp) return [myComp];
     if (targetId) {
-      return [createDefaultCompany(targetId, 'Carregando empresa...', user?.name)];
+      return [createDefaultCompany(targetId, 'Carregando empresa...')];
     }
     return companies.slice(0, 1);
   }, [companies, isSuperAdmin, user, currentCompanyId]);
@@ -460,23 +455,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             auditLogs,
           } = json.data;
 
-          if (clients) setAllClients((prev) => [...prev.filter((c) => c.companyId !== companyId), ...clients]);
-          if (properties) setAllProperties((prev) => [...prev.filter((p) => p.companyId !== companyId), ...properties]);
-          if (talhoes) setAllTalhoes((prev) => [...prev.filter((t) => t.companyId !== companyId), ...talhoes]);
-          if (drones) setAllDrones((prev) => [...prev.filter((d) => d.companyId !== companyId), ...drones]);
-          if (batteries) setAllBatteries((prev) => [...prev.filter((b) => b.companyId !== companyId), ...batteries]);
-          if (maintenanceRecords) setAllMaintenanceRecords((prev) => [...prev.filter((m) => m.companyId !== companyId), ...maintenanceRecords]);
-          if (pilots) setAllPilots((prev) => [...prev.filter((p) => p.companyId !== companyId), ...pilots]);
+          setAllClients(Array.isArray(clients) ? clients : []);
+          setAllProperties(Array.isArray(properties) ? properties : []);
+          setAllTalhoes(Array.isArray(talhoes) ? talhoes : []);
+          setAllDrones(Array.isArray(drones) ? drones : []);
+          setAllBatteries(Array.isArray(batteries) ? batteries : []);
+          setAllMaintenanceRecords(Array.isArray(maintenanceRecords) ? maintenanceRecords : []);
+          setAllPilots(Array.isArray(pilots) ? pilots : []);
           if (crops && crops.length > 0) setCrops(crops);
           if (products && products.length > 0) setProducts(products);
-          if (occurrences) setAllOccurrences((prev) => [...prev.filter((o) => o.companyId !== companyId), ...occurrences]);
-          if (quotes) setAllQuotes((prev) => [...prev.filter((q) => q.companyId !== companyId), ...quotes]);
-          if (serviceOrders) setAllServiceOrders((prev) => [...prev.filter((os) => os.companyId !== companyId), ...serviceOrders]);
-          if (accountsReceivable) setAllAccountsReceivable((prev) => [...prev.filter((r) => r.companyId !== companyId), ...accountsReceivable]);
-          if (accountsPayable) setAllAccountsPayable((prev) => [...prev.filter((p) => p.companyId !== companyId), ...accountsPayable]);
-          if (pilotCommissions) setAllPilotCommissions((prev) => [...prev.filter((c) => c.companyId !== companyId), ...pilotCommissions]);
-          if (receiptNotes) setAllReceiptNotes((prev) => [...prev.filter((n) => n.companyId !== companyId), ...receiptNotes]);
-          if (auditLogs) setAllAuditLogs((prev) => [...prev.filter((l) => l.companyId !== companyId), ...auditLogs]);
+          setAllOccurrences(Array.isArray(occurrences) ? occurrences : []);
+          setAllQuotes(Array.isArray(quotes) ? quotes : []);
+          setAllServiceOrders(Array.isArray(serviceOrders) ? serviceOrders : []);
+          setAllAccountsReceivable(Array.isArray(accountsReceivable) ? accountsReceivable : []);
+          setAllAccountsPayable(Array.isArray(accountsPayable) ? accountsPayable : []);
+          setAllPilotCommissions(Array.isArray(pilotCommissions) ? pilotCommissions : []);
+          setAllReceiptNotes(Array.isArray(receiptNotes) ? receiptNotes : []);
+          setAllAuditLogs(Array.isArray(auditLogs) ? auditLogs : []);
         }
       }
     } catch (err) {
@@ -707,23 +702,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const currentUserName = useMemo(() => {
     switch (currentUserRole) {
       case 'proprietario':
-        return currentCompany.ownerName || 'Lucas Moura';
+        return currentCompany.ownerName || user?.name || 'Usuário';
       case 'administrador':
-        return 'Mariana Costa (Administradora)';
+        return user?.name || 'Usuário';
       case 'gestor_operacional':
-        return 'Rodrigo Toledo (Gestor de Operações)';
+        return user?.name || 'Usuário';
       case 'piloto':
-        return 'João Pedro Silveira (Piloto)';
+        return user?.name || 'Usuário';
       case 'financeiro':
-        return 'Patrícia Nogueira (Financeiro)';
+        return user?.name || 'Usuário';
       case 'super_admin':
-        return 'Super Administrador (MOUTRYX)';
+        return user?.name || 'Usuário';
       default:
-        return 'Consultor Agronômico';
+        return user?.name || 'Usuário';
     }
   }, [currentUserRole, currentCompany]);
 
-  const currentUserId = 'user-current';
+  const currentUserId = user?.id || '';
 
   // Audit Logger
   const logAction = (
@@ -797,12 +792,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const paidReceipts = compReceipts.filter((n) =>
       n.paymentMethod === 'cartao_corporativo' ||
       n.paymentMethod === 'faturado_empresa' ||
+      n.reimbursementStatus === 'aprovado' ||
       n.reimbursementStatus === 'reembolsado'
     );
     const totalPaidReceipts = paidReceipts.reduce((acc, n) => acc + (n.totalAmount || 0), 0);
 
     // Total expenses logged in field (for field expenses module overview)
-    const totalReceiptsSpent = compReceipts.reduce((acc, n) => acc + (n.totalAmount || 0), 0);
+    const totalReceiptsSpent = compReceipts.filter((n) => n.paymentMethod === 'cartao_corporativo' || n.paymentMethod === 'faturado_empresa' || n.reimbursementStatus === 'aprovado' || n.reimbursementStatus === 'reembolsado').reduce((acc, n) => acc + (n.totalAmount || 0), 0);
 
     const hasRealCosts = paidPayables.length > 0 || paidReceipts.length > 0;
     const totalCost = hasRealCosts ? (totalPaidPayables + totalPaidReceipts) : 0;
@@ -2028,6 +2024,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const savedNote = (res && (res.data || res.receiptNote)) ? (res.data || res.receiptNote) : newNote;
 
     setAllReceiptNotes((prev) => [savedNote, ...prev.filter((n) => n.id !== savedNote.id)]);
+    await refreshTenantDataFromServer(currentCompany.id, true);
     logAction(
       'Registro de Notinha/Despesa',
       'Financeiro',
@@ -2180,7 +2177,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       const reimbursementPending = pilotNotes.filter((n) => n.reimbursementStatus === 'pendente').reduce((sum, n) => sum + (n.totalAmount || 0), 0);
       const reimbursementApproved = pilotNotes.filter((n) => n.reimbursementStatus === 'aprovado').reduce((sum, n) => sum + (n.totalAmount || 0), 0);
-      const reimbursementPaid = pilotNotes.filter((n) => n.reimbursementStatus === 'reembolsado').reduce((sum, n) => sum + (n.totalAmount || 0), 0);
+      const reimbursementPaid = pilotNotes.filter((n) => n.reimbursementStatus === 'aprovado' ||
+      n.reimbursementStatus === 'reembolsado').reduce((sum, n) => sum + (n.totalAmount || 0), 0);
       const corporateCardSpent = pilotNotes.filter((n) => n.reimbursementStatus === 'corporativo' || n.paymentMethod === 'cartao_corporativo').reduce((sum, n) => sum + (n.totalAmount || 0), 0);
 
       return {
@@ -2221,7 +2219,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const otherSpent = unassignedNotes.filter((n) => n.category === 'outro').reduce((sum, n) => sum + (n.totalAmount || 0), 0);
         const reimbursementPending = unassignedNotes.filter((n) => n.reimbursementStatus === 'pendente').reduce((sum, n) => sum + (n.totalAmount || 0), 0);
         const reimbursementApproved = unassignedNotes.filter((n) => n.reimbursementStatus === 'aprovado').reduce((sum, n) => sum + (n.totalAmount || 0), 0);
-        const reimbursementPaid = unassignedNotes.filter((n) => n.reimbursementStatus === 'reembolsado').reduce((sum, n) => sum + (n.totalAmount || 0), 0);
+        const reimbursementPaid = unassignedNotes.filter((n) => n.reimbursementStatus === 'aprovado' ||
+      n.reimbursementStatus === 'reembolsado').reduce((sum, n) => sum + (n.totalAmount || 0), 0);
         const corporateCardSpent = unassignedNotes.filter((n) => n.reimbursementStatus === 'corporativo' || n.paymentMethod === 'cartao_corporativo').reduce((sum, n) => sum + (n.totalAmount || 0), 0);
 
         summaries.push({

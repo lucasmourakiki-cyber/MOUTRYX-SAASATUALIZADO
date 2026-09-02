@@ -52,8 +52,8 @@ export const FieldSummaryModal: React.FC<FieldSummaryModalProps> = ({
   if (!isOpen) return null;
 
   const appliedPct = calculateAppliedPercentage(appliedAreaHa, serviceOrder.areaHa);
-  const resolvedPilot = serviceOrder.pilotName || pilotName || 'Piloto Responsável';
-  const resolvedDrone = serviceOrder.droneModel || 'DJI Agras T50';
+  const resolvedPilot = serviceOrder.pilotName || pilotName || 'Não informado';
+  const resolvedDrone = serviceOrder.droneModel || 'Não informado';
 
   // Extract all occurrences in chronological order
   const occurrenceActions = osActions.filter((a) => a.type === 'OCCURRENCE');
@@ -136,7 +136,18 @@ Resumo: ${occurrenceActions.length} ocorrências | ${allPhotos.length} fotos reg
   };
 
   const handlePrint = () => {
-    window.print();
+    const source = document.querySelector('.fixed.inset-0.z-50 .overflow-y-auto') as HTMLElement | null;
+    if (!source) return;
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+    printWindow.document.open();
+    printWindow.document.write(`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Resumo de Campo - ${serviceOrder.osNumber}</title><style>@page{size:A4 portrait;margin:10mm}*{box-sizing:border-box}html,body{background:#fff;color:#111827;margin:0;padding:0}body{font-family:Arial,Helvetica,sans-serif;font-size:10pt;line-height:1.4}.print-sheet{width:100%;max-width:180mm;margin:0 auto}.print-sheet .overflow-y-auto{overflow:visible!important;max-height:none!important}.print-sheet img{max-width:100%;height:auto;break-inside:avoid;page-break-inside:avoid}.print-sheet button{display:none!important}.print-sheet [class*="sticky"]{position:static!important}</style></head><body><main class="print-sheet">${source.innerHTML}</main></body></html>`);
+    printWindow.document.close();
+    const images = Array.from(printWindow.document.images);
+    let remaining = images.length;
+    const printNow = () => { printWindow.focus(); printWindow.print(); };
+    if (!remaining) printNow();
+    else images.forEach((img) => { const done=()=>{ remaining-=1; if(remaining===0) printNow(); }; if(img.complete) done(); else { img.onload=done; img.onerror=done; } });
   };
 
   return (
