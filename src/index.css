@@ -20,13 +20,11 @@
     --moutryx-border: #E2E8E5;
     --moutryx-border-secondary: #D5E0DA;
     
-    /* Semantic Status */
     --moutryx-success: #16A34A;
     --moutryx-warning: #E6A817;
     --moutryx-info: #2F80C0;
     --moutryx-error: #DC2626;
 
-    /* Base Mappings */
     --color-primary-dark: #05521F;
     --color-primary: #05521F;
     --color-primary-hover: #0B6B32;
@@ -49,7 +47,6 @@
   }
 }
 
-/* Touch & Mobile UX Enhancements */
 .touch-callout-none {
   -webkit-touch-callout: none;
 }
@@ -62,7 +59,6 @@
   scrollbar-width: none;
 }
 
-/* Custom subtle scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -79,64 +75,93 @@
 }
 
 /* ==========================================================================
-   PRINT STYLES FOR SERVICE ORDERS, QUOTES & REPORTS
+   PRINT STYLES — A4, MOBILE SAFE, NO MODAL/SCROLL ARTIFACTS
    ========================================================================== */
 @media print {
   @page {
     size: A4 portrait;
-    margin: 12mm 15mm;
+    margin: 10mm 12mm;
   }
 
-  /* Reset all background styling and hide screen navigation */
-  html, body {
+  html,
+  body {
     background: #ffffff !important;
     color: #000000 !important;
-    font-size: 10pt !important;
     margin: 0 !important;
     padding: 0 !important;
     height: auto !important;
+    min-height: 0 !important;
     overflow: visible !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
-  /* Hide screen chrome: navigation, sidebars, buttons, backdrop overlays */
+  /* Hide normal application chrome while a printable modal/document is open. */
+  body:has(.fixed.inset-0) #root > * {
+    visibility: hidden !important;
+  }
+
+  body:has(.fixed.inset-0) .fixed.inset-0,
+  body:has(.fixed.inset-0) .fixed.inset-0 * {
+    visibility: visible !important;
+  }
+
   nav,
   aside,
   header,
   footer,
-  .no-print,
   button,
   input,
   select,
-  [role="dialog"] > div:first-child:not([id^="printable"]) {
-    /* Hide decorative backdrops */
+  textarea,
+  .no-print {
+    display: none !important;
   }
 
-  /* Neutralize fixed modal overlay when printing directly */
+  /* Neutralize fixed overlays and scroll containers. */
   .fixed.inset-0 {
     position: static !important;
-    background: transparent !important;
-    backdrop-filter: none !important;
+    inset: auto !important;
+    display: block !important;
+    width: 100% !important;
+    min-height: 0 !important;
+    height: auto !important;
     padding: 0 !important;
     margin: 0 !important;
-    height: auto !important;
+    background: #ffffff !important;
+    backdrop-filter: none !important;
     overflow: visible !important;
-    display: block !important;
   }
 
-  /* Remove modal constraints */
   .fixed.inset-0 > div {
+    position: static !important;
+    width: 100% !important;
     max-width: 100% !important;
     max-height: none !important;
-    box-shadow: none !important;
-    border: none !important;
-    padding: 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
     margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
     overflow: visible !important;
+    background: #ffffff !important;
   }
 
-  /* Keep only the printable document clean and full width */
+  .fixed.inset-0 .overflow-y-auto,
+  .fixed.inset-0 .overflow-auto,
+  .fixed.inset-0 .overflow-hidden {
+    overflow: visible !important;
+    max-height: none !important;
+    height: auto !important;
+  }
+
+  .fixed.inset-0 .shrink-0 {
+    flex-shrink: 0 !important;
+  }
+
+  /* Dedicated printable documents. */
   #printable-os,
   #printable-quote,
   #printable-report,
@@ -146,17 +171,21 @@
     max-width: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
+    border: 0 !important;
     box-shadow: none !important;
-    border: none !important;
     background: #ffffff !important;
   }
 
-  /* Avoid page break inside signature lines and summary boxes */
-  .avoid-break,
-  .grid,
   table,
-  tr {
+  tr,
+  .avoid-break,
+  .grid {
+    break-inside: avoid !important;
     page-break-inside: avoid !important;
+  }
+
+  img {
+    max-width: 100% !important;
     break-inside: avoid !important;
   }
 }
